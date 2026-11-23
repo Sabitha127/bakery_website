@@ -18,7 +18,7 @@ export default function AboutPage() {
           <div className="absolute inset-0 bg-black/45" />
         </div>
 
-        <div className="relative mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 sm:py-24 text-center text-white">
+        <div className="relative mx-auto w-full max-w-7xl px-4 py-16 text-center text-white sm:px-6 sm:py-24">
           <p className="text-xs font-semibold uppercase tracking-[5px]">
             Welcome to Butter & Bloom
           </p>
@@ -77,12 +77,15 @@ export default function AboutPage() {
           </Link>
         </div>
 
-        <div className="overflow-hidden rounded-[40px]">
-          <img
-            src="https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=1000"
-            alt="Bakery assortment"
-            className="h-[450px] w-full object-cover transition duration-700 hover:scale-105"
-          />
+        {/* Square About Image */}
+        <div className="mx-auto w-full max-w-[500px] overflow-hidden rounded-3xl md:rounded-[40px]">
+          <div className="aspect-square w-full">
+            <img
+              src="https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=1000"
+              alt="Bakery assortment"
+              className="h-full w-full object-cover transition duration-700 hover:scale-105"
+            />
+          </div>
         </div>
       </section>
 
@@ -146,7 +149,7 @@ export default function AboutPage() {
       </section>
 
       {/* Product Gallery */}
-      <section className="mx-auto max-w-7xl px-6 py-20 md:py-28">
+      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28">
 
         <div className="text-center">
           <p className="text-xs font-bold uppercase tracking-[4px] text-[#a36a49]">
@@ -163,7 +166,8 @@ export default function AboutPage() {
           </p>
         </div>
 
-        <div className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4">
+        {/* Square Image Grid */}
+        <div className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
 
           {[
             {
@@ -174,7 +178,7 @@ export default function AboutPage() {
             {
               name: "Traditional Sweets",
               image:
-               "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=700",
+                "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=700",
             },
             {
               name: "Freshly Baked",
@@ -187,16 +191,18 @@ export default function AboutPage() {
                 "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=700",
             },
           ].map((item) => (
-            <div key={item.name} className="group">
-              <div className="overflow-hidden rounded-2xl">
+            <div key={item.name} className="group min-w-0">
+
+              {/* Square Image */}
+              <div className="aspect-square w-full overflow-hidden rounded-2xl">
                 <img
                   src={item.image}
                   alt={item.name}
-                  className="h-64 w-full object-cover transition duration-700 group-hover:scale-110 md:h-80"
+                  className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
                 />
               </div>
 
-              <h3 className="mt-4 text-center font-serif text-lg font-bold">
+              <h3 className="mt-3 text-center font-serif text-sm font-bold sm:mt-4 sm:text-lg">
                 {item.name}
               </h3>
             </div>
@@ -205,7 +211,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      
     </main>
   );
 }

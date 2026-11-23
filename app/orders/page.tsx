@@ -80,6 +80,10 @@ export default function MyOrdersPage() {
   );
 
   useEffect(() => {
+    let isActive = true;
+    let currentCustomer: Customer | null = null;
+    let customerOrders: Order[] = [];
+
     try {
       const savedUser = localStorage.getItem(
         "butter-bloom-current-user"
@@ -87,38 +91,46 @@ export default function MyOrdersPage() {
 
       if (!savedUser) {
         router.replace("/login");
-        return;
-      }
+      } else {
+        const currentUser: Customer = JSON.parse(savedUser);
 
-      const currentUser: Customer = JSON.parse(savedUser);
+        if (!currentUser.id) {
+          router.replace("/login");
+        } else {
+          currentCustomer = currentUser;
 
-      if (!currentUser.id) {
-        router.replace("/login");
-        return;
-      }
-
-      setCustomer(currentUser);
-
-      const savedOrders = localStorage.getItem(
-        "butter-bloom-orders"
-      );
-
-      if (savedOrders) {
-        const parsedOrders = JSON.parse(savedOrders);
-
-        if (Array.isArray(parsedOrders)) {
-          const customerOrders = parsedOrders.filter(
-            (order: Order) => order.customerId === currentUser.id
+          const savedOrders = localStorage.getItem(
+            "butter-bloom-orders"
           );
 
-          setOrders(customerOrders);
+          if (savedOrders) {
+            const parsedOrders = JSON.parse(savedOrders);
+
+            if (Array.isArray(parsedOrders)) {
+              customerOrders = parsedOrders.filter(
+                (order: Order) => order.customerId === currentUser.id
+              );
+            }
+          }
         }
       }
     } catch (error) {
       console.error("Unable to load orders:", error);
-    } finally {
-      setIsLoaded(true);
     }
+
+    queueMicrotask(() => {
+      if (!isActive) {
+        return;
+      }
+
+      setCustomer(currentCustomer);
+      setOrders(customerOrders);
+      setIsLoaded(true);
+    });
+
+    return () => {
+      isActive = false;
+    };
   }, [router]);
 
   const toggleTracking = (orderId: string) => {
@@ -143,7 +155,7 @@ export default function MyOrdersPage() {
 
   if (!isLoaded) {
     return (
-      <main className="w-full min-w-0 flex min-h-screen items-center justify-center bg-[#fbf6f0]">
+      <main className="flex min-h-screen w-full min-w-0 items-center justify-center bg-[#fbf6f0]">
         <p className="text-[#8b4934]">Loading your orders...</p>
       </main>
     );
@@ -151,16 +163,15 @@ export default function MyOrdersPage() {
 
   if (!customer) {
     return (
-      <main className="w-full min-w-0 flex min-h-screen items-center justify-center bg-[#fbf6f0]">
+      <main className="flex min-h-screen w-full min-w-0 items-center justify-center bg-[#fbf6f0]">
         <p className="text-[#8b4934]">Redirecting to login...</p>
       </main>
     );
   }
 
   return (
-    <main className="w-full min-w-0 min-h-screen bg-[#fbf6f0] px-4 py-8 sm:px-5 sm:py-10 md:px-10">
+    <main className="min-h-screen w-full min-w-0 bg-[#fbf6f0] px-4 py-8 sm:px-5 sm:py-10 md:px-10">
       <div className="mx-auto max-w-6xl">
-
         {/* Page Header */}
         <div className="mb-8">
           <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-[#a45c40]">
@@ -178,9 +189,7 @@ export default function MyOrdersPage() {
 
         {/* Order Count */}
         <div className="mb-6 rounded-2xl bg-white p-4 shadow-sm sm:p-5">
-          <p className="text-sm text-gray-500">
-            Total Orders
-          </p>
+          <p className="text-sm text-gray-500">Total Orders</p>
 
           <p className="mt-1 text-3xl font-bold text-[#8b4934]">
             {orders.length}
@@ -190,7 +199,6 @@ export default function MyOrdersPage() {
         {/* Empty Orders */}
         {orders.length === 0 ? (
           <div className="rounded-3xl bg-white px-6 py-16 text-center shadow-sm">
-
             <div className="mb-5 text-6xl">📦</div>
 
             <h2 className="text-2xl font-bold text-[#43291f]">
@@ -198,7 +206,7 @@ export default function MyOrdersPage() {
             </h2>
 
             <p className="mt-3 text-gray-500">
-              You haven't placed any orders yet.
+              You haven&apos;t placed any orders yet.
               Explore our delicious bakery collection!
             </p>
 
@@ -208,11 +216,9 @@ export default function MyOrdersPage() {
             >
               Explore Products
             </Link>
-
           </div>
         ) : (
           <div className="space-y-6">
-
             {orders.map((order) => {
               const isExpanded = expandedOrderId === order.orderId;
               const activeStep = getCurrentStep(order.status);
@@ -222,16 +228,14 @@ export default function MyOrdersPage() {
                   key={order.orderId}
                   className="overflow-hidden rounded-2xl bg-white shadow-sm"
                 >
-
                   {/* Order Header */}
-                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#f0e5dc] bg-[#fffaf6] p-5">
-
+                  <div className="grid grid-cols-1 gap-3 border-b border-[#f0e5dc] bg-[#fffaf6] p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-4 sm:p-5">
                     <div>
                       <p className="text-xs text-gray-500">
                         Order ID
                       </p>
 
-                      <h2 className="mt-1 font-bold text-[#8b4934]">
+                      <h2 className="mt-1 break-all font-bold text-[#8b4934]">
                         {order.orderId}
                       </h2>
                     </div>
@@ -256,22 +260,19 @@ export default function MyOrdersPage() {
                     <span className="rounded-full bg-[#fdf0df] px-4 py-2 text-xs font-bold text-[#a45c40]">
                       {order.status}
                     </span>
-
                   </div>
 
                   {/* Ordered Products */}
                   <div className="space-y-4 p-5">
-
                     {order.items.map((item, index) => (
                       <div
                         key={`${item.id}-${item.variant}-${index}`}
-                        className="flex flex-wrap items-center gap-4"
+                        className="grid min-w-0 grid-cols-[64px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[80px_minmax(0,1fr)_auto] sm:gap-4"
                       >
-
                         <img
                           src={item.image}
                           alt={item.name}
-                          className="h-20 w-20 rounded-xl object-cover"
+                          className="h-16 w-16 rounded-xl object-cover sm:h-20 sm:w-20"
                         />
 
                         <div className="min-w-0 flex-1">
@@ -288,20 +289,17 @@ export default function MyOrdersPage() {
                           </p>
                         </div>
 
-                        <p className="font-bold text-[#8b4934]">
+                        <p className="col-start-2 font-bold text-[#8b4934] sm:col-start-auto">
                           ₹{(
                             item.price * item.quantity
                           ).toLocaleString("en-IN")}
                         </p>
-
                       </div>
                     ))}
-
                   </div>
 
                   {/* Delivery and Payment */}
                   <div className="grid gap-4 border-t border-[#f0e5dc] bg-[#fffaf6] p-5 sm:grid-cols-2">
-
                     <div>
                       <p className="text-xs text-gray-500">
                         Delivery Schedule
@@ -333,12 +331,10 @@ export default function MyOrdersPage() {
                           : order.paymentMethod}
                       </p>
                     </div>
-
                   </div>
 
                   {/* Order Footer */}
-                  <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[#f0e5dc] p-5">
-
+                  <div className="flex flex-col items-stretch gap-4 border-t border-[#f0e5dc] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                     <div>
                       <p className="text-xs text-gray-500">
                         Order Total
@@ -352,19 +348,17 @@ export default function MyOrdersPage() {
                     <button
                       type="button"
                       onClick={() => toggleTracking(order.orderId)}
-                      className="rounded-xl bg-[#8b4934] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#693725]"
+                      className="w-full rounded-xl bg-[#8b4934] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#693725] sm:w-auto"
                     >
                       {isExpanded
                         ? "Hide Tracking ↑"
                         : "Track Order ↓"}
                     </button>
-
                   </div>
 
                   {/* Expandable Tracking Section */}
                   {isExpanded && (
                     <div className="border-t border-[#f0e5dc] bg-[#fffaf6] p-5 md:p-8">
-
                       {/* Delivery Progress */}
                       <div className="mb-8">
                         <p className="text-xs font-bold uppercase tracking-wider text-[#a45c40]">
@@ -382,14 +376,14 @@ export default function MyOrdersPage() {
 
                       {/* Progress Percentage */}
                       <div className="mb-8">
-
                         <div className="mb-3 flex justify-between text-xs font-semibold text-gray-500">
                           <span>Order Progress</span>
 
                           <span className="text-green-700">
                             {Math.round(
                               ((activeStep + 1) / trackingSteps.length) * 100
-                            )}%
+                            )}
+                            %
                           </span>
                         </div>
 
@@ -403,29 +397,28 @@ export default function MyOrdersPage() {
                             }}
                           />
                         </div>
-
                       </div>
 
-                      {/* Horizontal Tracking Timeline */}
-                      <div className="overflow-x-auto pb-3">
-                        <div className="min-w-[620px]">
-
-                          <div className="relative px-[10%]">
-
+                      {/* Responsive Tracking Timeline */}
+                      <div className="mt-2">
+                        {/* Mobile and Tablet: Vertical Timeline */}
+                        <div className="lg:hidden">
+                          <div className="relative">
                             {/* Background Line */}
-                            <div className="absolute left-[10%] right-[10%] top-5 h-1 rounded-full bg-gray-200" />
+                            <div className="absolute bottom-5 left-5 top-5 w-0.5 bg-gray-200" />
 
-                            {/* Completed Green Line */}
+                            {/* Completed Progress Line */}
                             <div
-                              className="absolute left-[10%] top-5 h-1 rounded-full bg-green-500 transition-all duration-500"
+                              className="absolute left-5 top-5 w-0.5 bg-green-500 transition-all duration-500"
                               style={{
-                                width: `${activeStep * 20}%`,
+                                height: `${
+                                  (activeStep / (trackingSteps.length - 1)) *
+                                  100
+                                }%`,
                               }}
                             />
 
-                            {/* Tracking Steps */}
-                            <div className="relative grid grid-cols-5">
-
+                            <div className="relative space-y-6">
                               {trackingSteps.map((step, index) => {
                                 const isCompleted = index < activeStep;
                                 const isCurrent = index === activeStep;
@@ -433,11 +426,11 @@ export default function MyOrdersPage() {
                                 return (
                                   <div
                                     key={step.title}
-                                    className="flex flex-col items-center text-center"
+                                    className="flex min-w-0 items-start gap-4"
                                   >
-
+                                    {/* Step Icon */}
                                     <div
-                                      className={`z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 text-lg transition-all duration-300 ${
+                                      className={`z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-lg transition-all duration-300 ${
                                         isCompleted
                                           ? "border-green-600 bg-green-600 text-white"
                                           : isCurrent
@@ -448,8 +441,87 @@ export default function MyOrdersPage() {
                                       {isCompleted ? "✓" : step.icon}
                                     </div>
 
+                                    {/* Step Details */}
+                                    <div className="min-w-0 flex-1 pb-1">
+                                      <h4
+                                        className={`break-words text-sm font-bold ${
+                                          isCompleted || isCurrent
+                                            ? "text-green-700"
+                                            : "text-gray-400"
+                                        }`}
+                                      >
+                                        {step.title}
+                                      </h4>
+
+                                      <p className="mt-1 break-words text-xs leading-5 text-gray-500">
+                                        {step.description}
+                                      </p>
+
+                                      {isCurrent && (
+                                        <span className="mt-2 inline-block rounded-full bg-green-100 px-3 py-1 text-[10px] font-bold text-green-700">
+                                          Current Status
+                                        </span>
+                                      )}
+
+                                      {isCompleted && (
+                                        <span className="mt-2 inline-block text-[10px] font-semibold text-green-600">
+                                          ✓ Completed
+                                        </span>
+                                      )}
+
+                                      {!isCompleted && !isCurrent && (
+                                        <span className="mt-2 inline-block text-[10px] text-gray-400">
+                                          Pending
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Desktop: Horizontal Timeline */}
+                        <div className="hidden lg:block">
+                          <div className="relative px-[10%] py-1">
+                            {/* Background Line */}
+                            <div className="absolute left-[10%] right-[10%] top-5 h-1 rounded-full bg-gray-200" />
+
+                            {/* Completed Progress Line */}
+                            <div
+                              className="absolute left-[10%] top-5 h-1 rounded-full bg-green-500 transition-all duration-500"
+                              style={{
+                                width: `${activeStep * 20}%`,
+                              }}
+                            />
+
+                            <div className="relative grid grid-cols-5 gap-2">
+                              {trackingSteps.map((step, index) => {
+                                const isCompleted = index < activeStep;
+                                const isCurrent = index === activeStep;
+
+                                return (
+                                  <div
+                                    key={step.title}
+                                    className="flex min-w-0 flex-col items-center text-center"
+                                  >
+                                    {/* Step Icon */}
+                                    <div
+                                      className={`z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-lg transition-all duration-300 ${
+                                        isCompleted
+                                          ? "border-green-600 bg-green-600 text-white"
+                                          : isCurrent
+                                          ? "border-green-600 bg-green-50 text-green-700 ring-4 ring-green-100"
+                                          : "border-gray-300 bg-white text-gray-400"
+                                      }`}
+                                    >
+                                      {isCompleted ? "✓" : step.icon}
+                                    </div>
+
+                                    {/* Step Details */}
                                     <h4
-                                      className={`mt-3 text-xs font-bold ${
+                                      className={`mt-3 break-words text-xs font-bold ${
                                         isCompleted || isCurrent
                                           ? "text-green-700"
                                           : "text-gray-400"
@@ -457,6 +529,10 @@ export default function MyOrdersPage() {
                                     >
                                       {step.title}
                                     </h4>
+
+                                    <p className="mt-2 max-w-[130px] break-words text-[10px] leading-4 text-gray-500">
+                                      {step.description}
+                                    </p>
 
                                     {isCurrent && (
                                       <span className="mt-2 rounded-full bg-green-100 px-2 py-1 text-[10px] font-bold text-green-700">
@@ -469,11 +545,9 @@ export default function MyOrdersPage() {
                                         Completed
                                       </span>
                                     )}
-
                                   </div>
                                 );
                               })}
-
                             </div>
                           </div>
                         </div>
@@ -481,7 +555,6 @@ export default function MyOrdersPage() {
 
                       {/* Expected Delivery */}
                       <div className="mt-8 rounded-xl bg-white p-5">
-
                         <p className="text-sm text-gray-500">
                           Expected Delivery
                         </p>
@@ -499,12 +572,10 @@ export default function MyOrdersPage() {
                         <p className="mt-1 text-sm text-gray-500">
                           {order.timeSlot}
                         </p>
-
                       </div>
 
                       {/* Delivery Address */}
                       <div className="mt-5 rounded-xl bg-white p-5">
-
                         <h4 className="font-bold text-[#43291f]">
                           Delivery Address
                         </h4>
@@ -516,27 +587,21 @@ export default function MyOrdersPage() {
                         <p className="text-sm text-gray-600">
                           {order.customer.city} - {order.customer.pincode}
                         </p>
-
                       </div>
 
                       <p className="mt-5 text-center text-xs text-gray-500">
                         Demo tracking: actual delivery updates will be
                         connected to the bakery management system later.
                       </p>
-
                     </div>
                   )}
-
                 </section>
               );
             })}
-
           </div>
         )}
 
         {/* Continue Shopping */}
-        
-
       </div>
     </main>
   );
